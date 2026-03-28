@@ -1,16 +1,16 @@
 "use client"
-export const dynamic = "force-dynamic"
 
 import { useEffect } from "react"
 import { supabase } from "../../lib/supabase"
-import { useSearchParams } from "next/navigation"
 
 export default function Success() {
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     const updateSubscription = async () => {
-      const userId = searchParams.get("userId") // ✅ GET USER ID
+
+      // ✅ safer way (works in production)
+      const params = new URLSearchParams(window.location.search)
+      const userId = params.get("userId")
 
       if (!userId) {
         alert("No user ID found")
@@ -18,12 +18,10 @@ export default function Success() {
         return
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("users")
         .update({ is_subscribed: true })
         .eq("id", userId)
-        .select()
-      console.log(data, error)
 
       if (error) {
         console.log(error)
@@ -36,7 +34,7 @@ export default function Success() {
     }
 
     updateSubscription()
-  }, [searchParams])
+  }, [])
 
   return <p className="text-center mt-10">Processing payment...</p>
 }
