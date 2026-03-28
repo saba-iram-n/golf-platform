@@ -7,18 +7,28 @@ export default function Signup() {
   const [password, setPassword] = useState("")
 
   const handleSignup = async () => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password
-    })
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  })
 
-    if (error) {
-      alert(error.message)
-    } else {
-      alert("Check your email to confirm!")
-    }
+  if (error) {
+    alert(error.message)
+    return
   }
 
+  // ✅ ADD THIS
+  if (data.user) {
+    await supabase.from("users").insert({
+      id: data.user.id,
+      email: data.user.email,
+      is_subscribed: false
+    })
+  }
+
+  alert("Signup successful! Please login.")
+  window.location.href = "/login"
+  }
   return (
     <div className="flex flex-col bg-gray-700 items-center justify-center h-screen gap-4">
       <h1 className="text-2xl font-bold">Signup</h1>

@@ -42,6 +42,16 @@ export default function Login() {
       >
         Login
       </button>
+
+      <p>
+        Don’t have an account?{" "}
+      <span
+        className="text-blue-600 cursor-pointer"
+        onClick={() => window.location.href = "/signup"}
+      >
+      Signup
+      </span>
+      </p>
     </div>
   )
 }

@@ -11,20 +11,53 @@ export default function Dashboard() {
   // 🔐 Get user
   useEffect(() => {
     const getUser = async () => {
+      // const { data } = await supabase.auth.getUser()
+
+      // if (!data.user) {
+      //   window.location.href = "/login"
+      // } else {
+      //   setUser(data.user)
+      //   fetchScores(data.user.id)
+      //   fetchWinnings(data.user.id)
+      // }
+
       const { data } = await supabase.auth.getUser()
 
       if (!data.user) {
-        window.location.href = "/login"
-      } else {
-        setUser(data.user)
-        fetchScores(data.user.id)
-        fetchWinnings(data.user.id)
+      window.location.href = "/login"
+      return
       }
+
+    const userId = data.user.id
+
+    setScores([])
+    setWinnings([])
+    // now safe to use
+    const { data: subData } = await supabase
+    .from("users")
+    .select("is_subscribed")
+    .eq("id", userId)
+    .single()
+
+    const finalUser = {
+      ...data.user,
+      is_subscribed: subData?.is_subscribed || false
+    }
+
+    setUser(finalUser)
+
+    fetchScores(userId)
+    fetchWinnings(userId)
     }
 
     getUser()
+
+    window.addEventListener("focus", getUser)
+    return () => window.removeEventListener("focus", getUser)
+
   }, [])
 
+    
   // 📊 Fetch scores
   const fetchScores = async (userId: any) => {
     const { data, error } = await supabase
@@ -60,6 +93,11 @@ export default function Dashboard() {
       return
     }
 
+    if (!user?.is_subscribed) {
+    alert("Please subscribe to add scores")
+    return
+    }
+
     const { data } = await supabase
       .from("scores")
       .select("*")
@@ -84,27 +122,33 @@ export default function Dashboard() {
   }
 
   // 🎯 Run draw
-  const runDraw = async () => {
-    let numbers: number[] = []
-
-    while (numbers.length < 5) {
-      let num = Math.floor(Math.random() * 45) + 1
-      if (!numbers.includes(num)) {
-        numbers.push(num)
-      }
-    }
-
-    const { error } = await supabase.from("draws").insert({
-      numbers: numbers
-    })
-
-    if (error) {
-      alert("Error creating draw")
-    } else {
-      alert(`Draw created: ${numbers}`)
-    }
-  }
 //   const runDraw = async () => {
+//   let numbers: number[] = []
+
+//   while (numbers.length < 5) {
+//     let num = Math.floor(Math.random() * 45) + 1
+//     if (!numbers.includes(num)) {
+//       numbers.push(num)
+//     }
+//   }
+
+//   await supabase.from("draws").insert({
+//     numbers
+//   })
+
+//   alert(`Draw created: ${numbers}`)
+// }
+// const runDraw = async () => {
+//   if (!user) {
+//     alert("Login first")
+//     return
+//   }
+
+//   if (!user?.is_subscribed) {
+//     alert("Subscribe to run draw")
+//     return
+//   }
+
 //   const userScores = scores.map(s => s.score)
 
 //   if (userScores.length < 5) {
@@ -112,74 +156,172 @@ export default function Dashboard() {
 //     return
 //   }
 
-//   // 🔥 Force draw same as user scores
-//   const numbers = userScores
+//   const numbers = userScores // test mode
 
-//   await supabase.from("draws").insert({
-//     numbers: numbers
-//   })
+//   const { error } = await supabase
+//     .from("draws")
+//     .insert({
+//       numbers: numbers
+//     })
 
-//   alert("Test Draw Created (Guaranteed Win!)")
+//   if (error) {
+//     console.log("DRAW INSERT ERROR:", error)
+//     alert("Error creating draw")
+//     return
+//   }
+
+//   alert("Draw created successfully ✅")
 // }
+  //   const runDraw = async () => {
+  //   let numbers: number[] = []
+
+  //   while (numbers.length < 5) {
+  //     let num = Math.floor(Math.random() * 45) + 1
+  //     if (!numbers.includes(num)) {
+  //       numbers.push(num)
+  //     }
+  //   }
+
+  //   const { error } = await supabase.from("draws").insert({
+  //     numbers: numbers
+  //   })
+
+  //   if (error) {
+  //     alert("Error creating draw")
+  //   } else {
+  //     alert(`Draw created: ${numbers}`)
+  //   }
+  // }
+  const runDraw = async () => {
+  const userScores = scores.map(s => s.score)
+
+  if (userScores.length < 5) {
+    alert("Add 5 scores first")
+    return
+  }
+
+  if (!user?.is_subscribed) {
+    alert("Subscribe to participate in draw")
+    return
+  }
+  // 🔥 Force draw same as user scores
+  const numbers = userScores
+
+  await supabase.from("draws").insert({
+    numbers: numbers
+  })
+
+  alert("Test Draw Created (Guaranteed Win!)")
+}
 
   // 🏆 Check result + store winner
   const checkResult = async () => {
-    const { data } = await supabase
-      .from("draws")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1)
-
-    if (!data || data.length === 0) {
-      alert("No draw yet")
-      return
-    }
-
-
-    const drawNumbers = data[0].numbers
-    const userScores = scores.map(s => s.score)
-
-    const matchCount = userScores.filter((n: number) =>
-      drawNumbers.includes(n)
-    ).length
-
-    let matchType = ""
-    let amount = 0
-
-    if (matchCount === 5) {
-      matchType = "5-match"
-      amount = 1000
-    } else if (matchCount === 4) {
-      matchType = "4-match"
-      amount = 500
-    } else if (matchCount === 3) {
-      matchType = "3-match"
-      amount = 200
-    }
-
-    // Save winner
-    if (matchType !== "") {
-      await supabase.from("winners").insert({
-        user_id: user.id,
-        match_type: matchType,
-        amount: amount,
-        status: "pending"
-      })
-
-      fetchWinnings(user.id)
-    }
-
-    alert(`Draw: ${drawNumbers}\nResult: ${matchType || "No Match"}`)
+  if (!user) {
+    alert("Please login again")
+    return
   }
+
+  if (!user?.is_subscribed) {
+    alert("Subscribe to check results")
+    return
+  }
+
+  const { data, error } = await supabase
+    .from("draws")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  if (error) {
+    console.log(error)
+    alert("Error fetching draw")
+    return
+  }
+
+  if (!data || data.length === 0) {
+    alert("No draw yet")
+    return
+  }
+
+  const drawNumbers = data[0].numbers
+  const userScores = scores.map(s => s.score)
+
+  const matchCount = userScores.filter((n: number) =>
+    drawNumbers.includes(n)
+  ).length
+
+  let matchType = ""
+  let amount = 0
+
+  if (matchCount === 5) {
+    matchType = "5-match"
+    amount = 1000
+  } else if (matchCount === 4) {
+    matchType = "4-match"
+    amount = 500
+  } else if (matchCount === 3) {
+    matchType = "3-match"
+    amount = 200
+  }
+
+  if (matchType !== "") {
+    // ✅ prevent duplicates
+    const { data: existing } = await supabase
+      .from("winners")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("match_type", matchType)
+
+    if (!existing || existing.length === 0) {
+      const { error: insertError } = await supabase
+        .from("winners")
+        .insert({
+          user_id: user.id,
+          match_type: matchType,
+          amount: amount,
+          status: "pending"
+        })
+
+      if (insertError) {
+        console.log(insertError)
+      } else {
+        fetchWinnings(user.id)
+      }
+    }
+  }
+
+  alert(`Draw: ${drawNumbers}\nResult: ${matchType || "No Match"}`)
+}
   const handleSubscribe = async () => {
-    const res = await fetch("/api/checkout", {
-    method: "POST"
+  if (!user) {
+    alert("Please login first")
+    return
+  }
+
+  const res = await fetch("/api/checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userId: user.id
+    })
   })
 
-  const data = await res.json()
-  window.location.href = data.url
+  if (!res.ok) {
+    alert("Failed to start payment")
+    return
   }
 
+  const data = await res.json()
+
+  if (!data?.url) {
+    alert("Payment link error")
+    return
+  }
+
+  window.location.href = data.url
+}
   return (
   <div className="min-h-screen bg-gray-300 p-6">
     <div className="max-w-3xl mx-auto text-gray-600 shadow-lg rounded-xl p-6">
@@ -192,6 +334,17 @@ export default function Dashboard() {
         <p className="text-center text-gray-600 mb-4">
           Welcome, {user.email}
         </p>
+      )}
+
+      {user?.email?.toLowerCase() === "iramsara350@gmail.com" && (
+      <div className="flex justify-center mb-4">
+      <button
+      className="bg-red-600 text-white px-4 py-2 rounded"
+      onClick={() => window.location.href = "/admin"}
+      >
+      Go to Admin ⚙️
+      </button>
+      </div>
       )}
 
       {/* Add Score */}
@@ -254,12 +407,18 @@ export default function Dashboard() {
           </div>
         ))}
 
+        {!user?.is_subscribed ? (
         <button
-        className="bg-purple-600 text-white px-4 py-2 rounded"
-        onClick={handleSubscribe}
+          className="bg-purple-600 text-white px-4 py-2 rounded"
+          onClick={handleSubscribe}
         >
         Subscribe 💳
         </button>
+      ) : (
+        <p className="text-green-600 font-semibold text-center">
+           ✅ Subscription Active
+        </p>
+      )}
       </div>
 
     </div>

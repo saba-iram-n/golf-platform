@@ -6,7 +6,19 @@ export default function Admin() {
   const [winners, setWinners] = useState<any[]>([])
 
   useEffect(() => {
+  const checkAdmin = async () => {
+    const { data } = await supabase.auth.getUser()
+
+    if (!data.user || data.user.email?.toLowerCase() !== "iramsara350@gmail.com") {
+      alert("Access denied")
+      window.location.href = "/dashboard"
+      return
+    }
+
     fetchWinners()
+  }
+
+  checkAdmin()
   }, [])
 
   const fetchWinners = async () => {
