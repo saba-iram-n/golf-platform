@@ -1,36 +1,217 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⛳ Golf Charity Subscription Platform
 
-## Getting Started
+A full-stack subscription-based web application combining **golf performance tracking, monthly prize draws, and charitable giving**.
 
-First, run the development server:
+Built as part of a trainee evaluation assignment by **Digital Heroes**.
+
+---
+
+## 🚀 Live Demo
+
+> (Add your Vercel link here)
+
+---
+
+## 📌 Project Overview
+
+This platform allows users to:
+
+* Subscribe via secure payment (Stripe)
+* Enter and track their last 5 golf scores (Stableford format)
+* Participate in monthly draw-based prize pools
+* Win rewards based on score matching
+* Contribute to charity through subscriptions
+
+---
+
+## 👥 User Roles
+
+### 🔹 Public User
+
+* View platform
+* Signup / Login
+* Subscribe
+
+### 🔹 Registered User
+
+* Enter golf scores (1–45)
+* Participate in draws
+* View winnings
+* Manage subscription
+
+### 🔹 Admin
+
+* View all winners
+* Mark payouts as completed
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend:** Next.js (App Router), React, Tailwind CSS
+* **Backend:** Supabase (Auth + Database)
+* **Payments:** Stripe
+* **Deployment:** Vercel
+
+---
+
+## 💳 Subscription System
+
+* Stripe Checkout integration
+* Redirect-based payment flow
+* Subscription status stored in Supabase
+* Feature access controlled via `is_subscribed`
+
+---
+
+## 📊 Core Features
+
+### ✅ Score Management
+
+* Users can add scores (1–45)
+* Only last 5 scores stored
+* Oldest score auto-deleted
+
+### 🎯 Draw System
+
+* Random / test-based draw generation
+* Match logic:
+
+  * 5 match → ₹1000
+  * 4 match → ₹500
+  * 3 match → ₹200
+
+### 🏆 Winner System
+
+* Winners stored in database
+* Status:
+
+  * `pending`
+  * `paid`
+
+### 🔐 Access Control
+
+* Non-subscribers can view dashboard
+* Actions restricted until subscription
+
+---
+
+## 🧠 Key Engineering Decisions
+
+* Used **Supabase Auth + custom users table**
+* Implemented **Row Level Security (RLS) policies**
+* Prevented duplicate winners
+* Used **query-based subscription validation**
+* Designed modular and scalable structure
+
+---
+
+## ⚠️ Known Limitations
+
+* Payment success is simulated (no webhook verification)
+* Admin role is email-based (not role table)
+* Draw logic currently in test mode (matches user scores)
+
+---
+
+## 🔮 Future Improvements
+
+* Real monthly draw automation
+* Charity selection system
+* Email notifications
+* Admin analytics dashboard
+* Secure role-based access control
+
+---
+
+## 🧪 Test Credentials
+
+> (Add test user email/password)
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1. Clone repo
+
+```bash
+git clone https://github.com/YOUR_USERNAME/golf-charity-platform.git
+cd golf-charity-platform
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Add environment variables
+
+Create `.env.local`:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+STRIPE_SECRET_KEY=your_key
+```
+
+### 4. Run project
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Database Schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### users
 
-## Learn More
+* id
+* email
+* is_subscribed
 
-To learn more about Next.js, take a look at the following resources:
+### scores
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* id
+* user_id
+* score
+* date
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### draws
 
-## Deploy on Vercel
+* id
+* numbers (int[])
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### winners
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* id
+* user_id
+* match_type
+* amount
+* status
+
+---
+
+## 🎯 Evaluation Highlights
+
+✔ Full-stack implementation
+✔ Payment integration
+✔ Database design
+✔ Access control logic
+✔ Clean UI & UX
+✔ Scalable architecture
+
+---
+
+## 👩‍💻 Author
+
+Saba Iram N
+The National Institute of Engineering
+Mysuru, India
+
+---
+
+## 📄 License
+
+This project is for educational and evaluation purposes only.
