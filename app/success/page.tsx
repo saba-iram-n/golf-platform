@@ -1,16 +1,13 @@
 "use client"
 
 export const dynamic = "force-dynamic"
-export const revalidate = 0
 
 import { useEffect } from "react"
-import { supabase } from "../../lib/supabase"
 
 export default function Success() {
 
   useEffect(() => {
-    const updateSubscription = async () => {
-
+    const run = async () => {
       const params = new URLSearchParams(window.location.search)
       const userId = params.get("userId")
 
@@ -19,20 +16,18 @@ export default function Success() {
         return
       }
 
-      const { error } = await supabase
-        .from("users")
-        .update({ is_subscribed: true })
-        .eq("id", userId)
-
-      if (error) {
-        console.log(error)
-        return
-      }
+      await fetch("/api/update-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ userId })
+      })
 
       window.location.href = "/dashboard"
     }
 
-    updateSubscription()
+    run()
   }, [])
 
   return <p className="text-center mt-10">Processing payment...</p>
