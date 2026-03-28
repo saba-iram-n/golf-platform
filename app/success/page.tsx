@@ -1,5 +1,8 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 import { useEffect } from "react"
 import { supabase } from "../../lib/supabase"
 
@@ -8,12 +11,10 @@ export default function Success() {
   useEffect(() => {
     const updateSubscription = async () => {
 
-      // ✅ safer way (works in production)
       const params = new URLSearchParams(window.location.search)
       const userId = params.get("userId")
 
       if (!userId) {
-        alert("No user ID found")
         window.location.href = "/login"
         return
       }
@@ -25,11 +26,9 @@ export default function Success() {
 
       if (error) {
         console.log(error)
-        alert("Update failed")
         return
       }
 
-      alert("Subscription activated ✅")
       window.location.href = "/dashboard"
     }
 
